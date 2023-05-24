@@ -46,6 +46,9 @@ dependencies:
   wakelock: ^0.6.2
   toast: ^0.3.0
   flutter_launcher_icons: ^0.12.0
+  connectivity_plus: ^3.0.3
+  rxdart: ^0.27.7
+  
 
 flutter_icons:
   android: "launcher_icon"

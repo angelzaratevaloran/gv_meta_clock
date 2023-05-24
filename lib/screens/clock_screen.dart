@@ -1,10 +1,17 @@
+import 'dart:async';
+
 import 'package:camera/camera.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:gv_meta_clock/models/record_employee.dart';
 import 'package:gv_meta_clock/services/employee.service.dart';
+import 'package:gv_meta_clock/services/record_employee.service.dart';
 import 'package:gv_meta_clock/widgets/cam_widget.dart';
 import 'package:gv_meta_clock/widgets/clock_widget.dart';
 import 'package:intl/intl.dart';
+
+
 
 class ClockScreen extends StatefulWidget {
   final CameraDescription cam;
@@ -18,12 +25,73 @@ class ClockScreen extends StatefulWidget {
 class _ClockScreenState extends State<ClockScreen> {
   final EmployeeService _employeeService = EmployeeService();  
   final _txtField = TextEditingController();
-  var _buttonDisabled = true;
+  var _buttonDisabled = true;  
+
+
+  final Connectivity _connectivity = Connectivity();
+  late StreamSubscription<ConnectivityResult> _subscription;
+  ConnectivityResult _connectionStatus = ConnectivityResult.none;
+  final serviceRecordEmployee = RecordEmployeeService();
+
+  final FocusNode _focusNode = FocusNode();
+
+
+
+
 
   @override
   void initState() {
     super.initState();
+    initConnectivity();
+    _subscription = _connectivity.onConnectivityChanged.listen(_updateConnectionStatus);
   }
+
+  
+
+
+  @override
+  void dispose() {
+    _subscription.cancel();
+    super.dispose();
+  }
+
+
+
+
+
+ // Connectivitty
+ Future<void> initConnectivity() async {
+  late ConnectivityResult result;
+  try {
+    result = await _connectivity.checkConnectivity();
+
+  }
+  on PlatformException {
+    return;
+  }
+  if(!mounted) {
+    return Future.value(null);
+  }
+  
+    return _updateConnectionStatus(result);
+ }
+
+ Future<void> _updateConnectionStatus(ConnectivityResult result) async {
+    setState(() {
+      _connectionStatus = result;
+
+      if(result.name == "wifi") { 
+        RecordEmployeeService().sync();
+      }
+    });
+  }
+
+
+ 
+
+
+
+
 
   void checkEmployee(BuildContext context, bool entrada) async {
     if (_txtField.text.isEmpty) {
@@ -35,7 +103,8 @@ class _ClockScreenState extends State<ClockScreen> {
       final employee = await _employeeService.checkBadge(numberBadge);
       var dateTime = DateFormat("yyyy-MM-ddTHH:mm:ss").format(DateTime.now());
       var record = RecordEmployee(badge: numberBadge, photo: "", dateTime: dateTime, state: entrada);
-      _txtField.clear();
+      _txtField.clear();    
+      _focusNode.requestFocus();  
       Navigator.of(context).push(MaterialPageRoute(
           builder: (ctx) => CamWidget(
                 cam: widget.cam,
@@ -58,11 +127,12 @@ class _ClockScreenState extends State<ClockScreen> {
             child: TextFormField(
               onChanged: (value) {
                 setState(() {
-                  _buttonDisabled = value.isEmpty;
+                  _buttonDisabled = value.isEmpty;                
                 });
               },
               autofocus: true,
               controller: _txtField,
+              focusNode: _focusNode,
               maxLength: 6,
               style: const TextStyle(fontSize: 18),
               decoration: InputDecoration(
@@ -115,6 +185,28 @@ class _ClockScreenState extends State<ClockScreen> {
           )
         ]),
       ),
+    
+      bottomSheet: Container(
+        padding: const EdgeInsets.only(left: 20, right: 20),
+        color: Colors.blue,
+        height: 30,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          mainAxisSize: MainAxisSize.max,
+          
+          children: [
+            Text('Estado De Red: ${_connectionStatus.name}', style: const TextStyle(color: Colors.white, fontSize: 24)), 
+            // Text('Asistencias Recolectadas:1    |    Por Sincronizar : $_totalAttendancesToday', style: const TextStyle(color: Colors.white, fontSize: 24)),             
+          ]
+          
+        ),
+
+
+      ) //  const Text("Hola mundo", style: TextStyle(color: Colors.purpleAccent, fontSize: 24),),
+    
+      // footer: new Footer(child: child)
+
     );
   }
 }

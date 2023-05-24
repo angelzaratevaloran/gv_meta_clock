@@ -22,8 +22,7 @@ class CamWidget extends StatefulWidget {
 
 class _CamWidgetState extends State<CamWidget> {
   late CameraController _controller;
-  // late Future<void> _initializeControllerFuture;
-  Duration timer = const Duration(seconds: 5);
+  Duration timer = const Duration(seconds: 3);
   Timer? counter;
 
   BuildContext? ctx; 
@@ -52,7 +51,7 @@ class _CamWidgetState extends State<CamWidget> {
     final photoBase64 = convert.base64Encode(photoAsBytes);
     widget.record.photo = photoBase64;
     final notify = await RecordEmployeeService().register(widget.record);    
-    final bg = notify.status == 200 ? Colors.green : Colors.red;
+    final bg = notify.status == 200 ? Colors.green : notify.status == 300 ? Colors.amber :  Colors.red;
     Toast.show(notify.message,backgroundColor: bg, duration: Toast.lengthLong, gravity: Toast.bottom );
     Navigator.pop(ctx!); 
   }

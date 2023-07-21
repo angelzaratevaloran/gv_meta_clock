@@ -16,6 +16,7 @@ class RecordEmployeeService {
   static final RecordEmployeeService _instance = RecordEmployeeService._internal();
 
   final HttpApi api = HttpApi();
+  
 
   factory RecordEmployeeService () {
     return _instance;
@@ -37,9 +38,11 @@ class RecordEmployeeService {
 
 
   Future<Notify> sync() async  {
+    
     var notify = Notify(status: 300, message: "Procesando en la nube...");
     final pendings = await getRecordsPendings();
     try {
+      
       final response  = await http.post(api.getURI("attendances"), body:  jsonEncode(pendings), headers: {
         "Content-Type": "application/json",
       });

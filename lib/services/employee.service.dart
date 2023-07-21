@@ -8,11 +8,13 @@ import "package:http/http.dart" as http;
 class EmployeeService {
 
   static final EmployeeService _instance = EmployeeService._internal();
+  
   final HttpApi api = HttpApi();
 
   List<Employee> employees = List.empty();
   
   factory EmployeeService() {    
+    
     return _instance;    
   }
   
